@@ -1,0 +1,73 @@
+---
+title: "st231 a3"
+author: "Jingyu Zhang"
+date: "2026-02-15"
+output: pdf_document
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+1.
+```{r, echo=FALSE}
+df<- read.csv('dia3.csv')
+model <- lm(log(price) ~ log(weight), data = df)
+coef(model)
+
+```
+
+$\log(\text{price}) = 1.699 \log(\text{weight}) + 8.437$  
+$\text{price} = e^{8.437} \cdot \text{weight}^{1.699}$  
+If weight (in carat) of diamond increases by a factor c, then the price(in US Dollars) of diamond increases by a factor $c^{1.699}$.
+
+2.  
+$c=1.01$  
+$c^{1.699}=1.01^{1.699}=1.01712$  
+percentage change in price =$(1.017 - 1) \times 100 \approx 1.71\%$  
+Therefore, The predicted price should be 1.71% higher than originally calculated.
+
+3.  
+
+```{r Question1,echo = FALSE, fig.cap="A scatterplot of weight of diamond in carat agianst lengh of the diamond in mm.The fitted curves shows non-linear relationship between these two variables", fig.alt="A scatterplot of diamond prices in Dollars against the weight of the diamond in carat. The fitted curves for a quadratic regression model and a cubic regression model have been added to the plot.  For further comments on the plot, see the main text.", out.width="80%"}
+
+plot(df$x, df$weight, 
+     main="Scatterplot of Weight vs Length",
+     xlab="Length (mm)", ylab="Weight (carats)", 
+     pch=19, col="steelblue")
+
+lines(lowess(df$x, df$weight), col="red", lwd=2)
+```
+The red line in figure 1 is like a "parabolic" curve. This indicates that a simple linear regression would violate the linearity assumption, as the change in weight per unit of length is not constant.  
+
+In a practical sense, a diamond is a three-dimensional object. If we assume diamonds are cut to relatively consistent proportions, the weight ($W$) should be proportional to the volume. Mathematically, volume scales with the cube of a linear dimension ($L^3$). Therefore, we expect:$$W \approx k \cdot L^3$$Where $k$ is a constant related to the density of diamond and the specific "cut" or shape. o make this relationship linear, we apply a log-log transformation. By taking the natural logarithm of both sides:$$\ln(W) = \ln(k) + 3 \ln(L)$$This transforms the power curve into a straight line where the slope should theoretically be near 3. See figure 2.
+
+  
+```{r Question2,echo = FALSE, fig.cap="A scatterplot of weight of diamond in carat after log transformation agianst lengh of the diamond in mm after log transfomation.The fitted curves shows linear relationship between these two variables in log-log scale", fig.alt="A scatterplot of diamond prices in Dollars against the weight of the diamond in carat. The fitted curves for a quadratic regression model and a cubic regression model have been added to the plot.  For further comments on the plot, see the main text.", out.width="80%"}
+
+plot(log(weight) ~ log(x), data = df, 
+     col = 'steelblue', pch = 19, 
+     xlab = "log(Length in mm)", ylab = "log(Weight in carats)",
+     main = "Log-Log Transformation: Weight vs Length")
+
+log_model <- lm(log(weight) ~ log(x), data = df)
+abline(log_model, col = "red", lwd = 2)
+```
+
+```{r Question3,echo = FALSE, fig.cap=" Residuals versus fitted values plots for the log-log model. The random scatter justifies the linearity and homoscedasticity assumptions.", fig.alt="A scatterplot of diamond prices in Dollars against the weight of the diamond in carat. The fitted curves for a quadratic regression model and a cubic regression model have been added to the plot.  For further comments on the plot, see the main text.", out.width="80%"}
+
+par(mar = c(5, 4.5, 2, 2))
+plot(log_model, which = 1, pch = 19, col = "steelblue")
+```
+  
+  
+  
+
+
+Evaluation for residual plot (figure 3):
+
+Linearity: In the Residuals vs Fitted plot, the red line is approximately horizontal and centered at zero,indicating that the log-transformation has successfully captured the non-linear trend, satisfying the linearity assumption.
+
+Homoscedasticity: Noise of residuals doesn't change as fitted values get larger, then the model meets the homoscedasticity assumption (constant variance of errors).

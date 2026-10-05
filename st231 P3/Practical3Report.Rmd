@@ -1,0 +1,115 @@
+---
+title: "Practical Report 3"
+output:
+   pdf_document: 
+     keep_tex: true
+     fig_caption: yes
+     highlight: monochrome
+   html_document:
+    df_print: paged
+    code_folding: hide
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="70%")} else {opts_chunk$set(echo=TRUE)}
+```
+
+# Case study - Nambe ware
+
+The dataset relates to the production of a sample of $n=58$ tableware products. After casting each piece of tableware goes through a series of grinding and polishing steps. The variables (adapted from the original dataset) are:
+
+- $\tt Diam$: the diameter of the product (in inches);
+- $\tt Time$: the total grinding and polishing time of the product (in minutes).
+
+<!---  Question 1 --->
+
+```{r, NambeWare, fig.cap=""}
+dta <- read.table("Nambe.csv", header=TRUE, sep=",")  
+
+# Histogram of diameter together with kernel density estimate
+hist(dta$Diam, prob=T, xlab="diameter (in inches)", main="")
+lines(density(dta$Diam),lwd=2, col="blue")
+legend("topright", legend = "kernel density estimate", lty=1, 
+       lwd=2, col="blue", bty="n")
+
+# Histogram of time together with kernel density estimate
+
+
+```
+
+<!---  Question 2 and Question 3 --->
+
+```{r, ScatterplotNambe, fig.show="hold", out.width="48%",fig.cap=""}
+# Scatterplot of the data
+plot(dta$Time~dta$Diam,xlab='diameter', ylab = 'time',pch=19,main='diameter vs time')
+
+
+# Add line of best fit
+m=lm(dta$Time~dta$Diam)
+abline(m,col='blue')
+# Residual plot for fitted model
+
+
+```
+
+<!--- Question 3 --->
+<!--- Discuss the residual plot --->
+
+```{r}
+plot(m$fitted.values, m$residuals,
+     xlab = 'Fitted Values (Predicted Time)',
+     ylab = 'Residuals',
+     main = 'Residual Plot: Time vs Diameter',
+     pch = 19)
+abline(h = 0, col = 'red', lty = 2, lwd = 2)
+
+
+```
+
+<!--- Question 4 --->
+<!--- Explain how to implement the model suggested by the engineer --->
+```{r}
+# Transform the data using natural logs
+log_time <- log(dta$Time)
+log_diam <- log(dta$Diam)
+
+# Run the linear regression on the logged data
+m_log <- lm(log_time ~ log_diam)
+coef(m_log)
+```
+
+
+<!--- Question 5 --->
+<!--- Fit suggested model, produce and then discuss residual plot --->
+
+```{r, ResidualPlotLogNambe, fig.cap=""}
+# Fit model
+model2 <- 
+# Residual plot
+
+```
+
+
+<!--- Question 6 --->
+<!--- Give an interpretation of the estimated slope coefficient. --->
+
+<!--- Question 7 --->
+<!--- Predict the processing time for a product of 15 inches diameter. --->
+
+<!--- Question 8 --->
+
+```{r, NambeLogModel, eval=FALSE, fig.cap=""}
+# Scatterplot of the data
+
+# Add titted model (in original scale of the data)
+ax <- seq(min(dta$Diam), max(dta$Diam), length.out=101)
+fitted.curve <- exp(predict(model2, newdata=list(Diam=ax)))
+lines(ax, fitted.curve, col="navy", lwd=2)
+```
+
+
+<!--- Question 9 --->
+<!--- Would a simple linear regression using the original variables suffice? --->

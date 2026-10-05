@@ -1,0 +1,109 @@
+---
+title: "st231 a5"
+author: "Jingyu Zhang"
+date: "2026-03-01"
+output:
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    latex_engine: xelatex
+    highlight: monochrome
+  html_document:
+    df_print: paged
+    code_folding: hide
+header-includes:
+   - \usepackage{float}
+fontsize: 12pt
+
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="80%", comment="")} else {opts_chunk$set(comment="")}
+```
+
+```{r,include=FALSE}
+dia5=read.csv('dia5.csv')
+```
+
+```{r,echo=FALSE}
+# 1. Fit the models
+mod1 <- lm(log(price) ~ log(weight), data = dia5)
+mod2 <- lm(log(price) ~ log(weight) + cut, data = dia5)
+
+# 2. Setup colors for the 'cut' factor
+# This assigns a unique color index to Fair, Very Good, and Ideal
+cut_colors <- as.numeric(as.factor(dia5$cut)) 
+```
+
+```{r, fig.cap=c("Residual plot categorized by diamond cut quality (Fair, Ideal, and Very Good) for model1: log(price) - log(weight)", "Residual plot categorized by diamond cut quality (Fair, Ideal, and Very Good) for model2: log(price) - log(weight) + cut."),fig.pos="H",echo=FALSE}
+# 3. Residual Plot for Model 1
+plot(fitted(mod1), residuals(mod1), 
+     col = cut_colors, 
+     pch = 16, 
+     main = "Model 1: Residuals vs Fitted",
+     xlab = "Fitted Values (log-price)", 
+     ylab = "Residuals")
+abline(h = 0, lty = 2)
+legend("topright", legend = levels(as.factor(dia5$cut)), 
+       col = 1:3, pch = 16, title = "Cut")
+
+# 4. Residual Plot for Model 2
+plot(fitted(mod2), residuals(mod2), 
+     col = cut_colors, 
+     pch = 16, 
+     main = "Model 2: Residuals vs Fitted",
+     xlab = "Fitted Values (log-price)", 
+     ylab = "Residuals")
+abline(h = 0, lty = 2)
+legend("topright", legend = levels(as.factor(dia5$cut)), 
+       col = 1:3, pch = 16, title = "Cut")
+```
+Model 1: There is a clear systematic bias based on the cut of the diamond. The black dots (Fair cut) are almost entirely clustered below the zero line, while the red (Ideal) and green (Very Good) dots are mostly above it. This indicates that a model using only weight consistently overestimates the price of Fair diamonds and underestimates the price of higher-quality cuts.
+
+Model 2: The inclusion of cut as a predictor has "centered" the groups. The black, red, and green points are now much more intermingled around the horizontal zero line. This suggests that accounting for the quality of the cut has removed the primary intercept bias seen in Model 1.
+
+Therefore, Model 2 is significantly better than Model 1.
+
+
+```{r, fig.cap=' Comparison between Model2 and Model3 of standardized residuals against log-weight for Fair-cut diamonds only.',echo=FALSE, fig.pos="H"}
+# 1. Fit the models
+# Model 3: Interaction (Unique slope for each cut)
+mod3 <- lm(log(price) ~ log(weight) * cut, data = dia5)
+
+# 2. Extract data for 'Fair' cut diamonds only
+is_fair <- dia5$cut == "Fair"
+fair_log_weight <- log(dia5$weight[is_fair])
+
+# 3. Get Standardized Residuals for both models (Fair only)
+std_res2_fair <- rstandard(mod2)[is_fair]
+std_res3_fair <- rstandard(mod3)[is_fair]
+
+# 4. Generate the Plots
+par(mfrow = c(1, 2)) # Side-by-side layout
+
+# Plot for Model 2
+plot(fair_log_weight, std_res2_fair, 
+     main = "Model 2: Fair Cut Std. Res",
+     xlab = "log(weight)", ylab = "Standardized Residuals", pch = 16)
+abline(lm(std_res2_fair ~ fair_log_weight), col = "red", lwd = 2)
+
+# Plot for Model 3
+plot(fair_log_weight, std_res3_fair, 
+     main = "Model 3: Fair Cut Std. Res",
+     xlab = "log(weight)", ylab = "Standardized Residuals", pch = 16)
+abline(lm(std_res3_fair ~ fair_log_weight), col = "blue", lwd = 2)
+
+par(mfrow = c(1, 1)) # Reset layout
+```
+2.
+Presence of Interaction: Red line (Model 2) downwards, while the blue line (Model 3) is horizontal at y=0. The fact that Model 2 shows a trend in its residuals while Model 3 does not proves that an interaction effect exists. The impact of weight on price is moderated by the quality of the cut.  
+Therefore, Model 3 is the superior model for this dataset. Using Model 2 would lead to systematic errors when predicting the price of very large or very small Fair-cut diamonds because it assumes their value increases at the same rate as higher-quality stones.   
+
+3.
+(1). A diamond's weight isn't the only thing that sets its price.  
+Initially, one might think you can predict a price just by knowing the carats. However, our first investigation showed that this is a mistake. If you only look at weight, you will consistently overprice "Fair" cut diamonds and underprice "Ideal" ones. In simple terms, the market pays a significant premium for the quality of the cut that weight alone cannot explain.  
+(2). The "Cut Premium" isn't a flat fee; it grows with the diamond.  
+Our second investigation revealed something more subtle. It isn't just that an "Ideal" diamond is more expensive than a "Fair" one of the same size; it’s that the rate at which the price increases as the diamond gets heavier is different for each cut. For Ideal Diamonds: As the carat weight increases, the price jumps up very aggressively. For Fair Diamonds: While the price still goes up with weight, it doesn't "climb" as fast as it does for the higher-quality cuts.
+

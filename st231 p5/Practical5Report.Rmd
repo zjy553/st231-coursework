@@ -1,0 +1,87 @@
+---
+title: "Practical Report 5"
+output:
+   pdf_document: 
+     keep_tex: true
+     fig_caption: yes
+     highlight: monochrome
+   bookdown::gitbook: 
+     highlight: monochrome
+     code_folding: hide
+     global_numbering: true
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%")} else {opts_chunk$set(echo=TRUE)}
+```
+
+
+
+# Regression outliers, leverage and influence  {-}
+
+<!--- Part 1 --->
+```{r, LoadPackages, message=FALSE}
+library(carData)
+data(Duncan)
+```
+
+<!--- Part 2 and 3: Brief description of the dataset --->
+
+
+<!--- Part 4: Scatterplot matrix --->
+
+
+<!--- Part 5: Regression of prestige on income and education --->
+
+
+```{r, out.width="60%", fig.align='center', fig.cap="Residual plot of the regression of prestige on income and education."}
+dc.model <- lm(prestige ~ income + education, data = Duncan)
+plot(dc.model, 1)
+```
+<!--- Comment on the residual plot --->
+
+
+<!--- Part 6 and 7: Examining leverages --->
+<!--- Annotate and then implement code chunk --->
+
+```{r}
+# 
+# 
+ind <- order(hatvalues(dc.model), decreasing=TRUE)[1:3]
+row.names(Duncan[ind,])
+```
+
+
+To identify why these observations have high leverages we produce a scatterplot of income against education. 
+```{r, IncomeEdu, out.width="60%", fig.align='center', fig.cap="Scatterplot of income versus education."}
+plot(income ~ education, data=Duncan)
+# Label 3 observations with highest leverages
+
+```  
+
+<!--- Part 8: Regression outliers --->
+
+Next we identify the observations that are regression outliers, that is those observations with an absolute standardised residual greater than two.
+
+
+<!--- Influence: Cook's distance --->
+
+
+We produce an index plot  of the Cook's distances for our fitted model.
+```{r, IndexCooks, out.width="60%", fig.align='center', fig.cap="Index plot of the Cook's distances."}
+plot(dc.model, 4)
+```
+
+We investigate these observations further in a residuals versus leverages plot.
+```{r, ResLev,  out.width="60%", fig.align='center', fig.cap="Plot of studentised residuals against leverages."}
+plot(dc.model, which=5, id.n=4)
+```
+
+
+<!--- Influence: removing influential observations --->
+
+Next we consider the effect that removing the observation minister has on the estimated coefficients. 
+

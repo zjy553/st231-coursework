@@ -1,0 +1,237 @@
+---
+title: "Practical Report 4"
+output:
+   pdf_document: 
+     keep_tex: true
+     fig_caption: yes
+     highlight: monochrome
+   html_document:
+    df_print: paged
+    code_folding: hide
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="60%")} else {opts_chunk$set(echo=TRUE)}
+```
+
+
+
+# Sampling distributions
+
+In the following we consider a simple linear regression model. We set $n=50$, $\boldsymbol{\beta}^T = (1 \; 2)$ and $\sigma^2=1$. 
+
+<!---  Question 1--->
+
+The model equations for the true linear model are given by 
+$$Y_j \quad = \quad$$
+where $j=1, \ldots,$ and $\epsilon_1, \ldots, \epsilon_50$ are iid $N(0, )$. 
+
+<!---  Question 2--->
+
+We start by producing a set of values for the explanatory variable.
+```{r, PredictorValues}
+# Set predictor values
+set.seed(4)
+x <- runif(50,-2,2)
+```
+
+<!---  Question 3 --->
+
+We sample a realisation of the error vector which has a .... distribution and use the error vector to produce a realisation of the response vector from the true model. Together with the values for the explanatory variable this forms Dataset 1.
+
+```{r, ResponseRealisation}
+# Sample response from true model
+error <- rnorm(50, 0, 1)
+y <- 1 + 2*x + error
+```
+
+<!---  Question 4 --->
+
+Figure 1 shows a scatterplot of the data together with the line of best fit.
+
+```{r, SLR1, fig.cap="A scatterplot of Dataset 1 together with the line of best fit."}
+# Fit linear model to data
+
+# Plot data
+
+# Add fitted regression line to plot
+
+# Estimated coefficients of fitted model
+
+```
+
+The estimated intercept is equal to .... and the estimated slope is equal to ..... Both values are close to the true parameters.
+
+<!---  Question 5 --->
+<!--- Note that you do not need to write another code chunk to produce the new dataset. You can simply reuse the code chunk as is done below.--->
+
+We create Dataset 2 by keeping the values of the explanatory variable fixed but sampling a new response vector. 
+
+```{r, ResponseRealisation1}
+```
+
+<!---  Question 6 --->
+Figure 2 shows a scatterplot of Dataset 2 together with the line of best fit.
+
+```{r, SLR2, fig.cap="A scatterplot of Dataset 2 together with the line of best fit."}
+# Fit linear model
+
+# Plot data
+
+# Add fitted regression line to plot
+
+# Estimated coefficients of fitted model
+
+```
+
+We note that the estimated regression line in Figure 2 is fairly close, but not identical to the one in Figure 1. The estimated intercept for the model fitted to Dataset 2 is equal to .... and the estimated slope is equal to ..... Both values are close to the estimates for Dataset 1.
+
+<!---  Question 7 --->
+<!--- Annotate the code below --->
+
+Next we repeat the experiment 10 times. 
+
+```{r, RepeatedRuns}
+sampling.dist <- function(Nruns=10, seed=4){ 
+#
+set.seed(seed)
+x <- runif(50,-2,2)
+#
+betahat <- matrix(NA, Nruns, 2)
+#
+for (j in 1:Nruns){
+  #
+  error <- rnorm(50, 0, 1)
+  y <- 1 + 2*x + error
+  #
+  m <- lm(y ~ x)
+  #
+  betahat[j,] <- coef(m)
+}
+return(betahat)}
+# Run the function sampling.dist with Nruns=10 and seed=4
+betahat=sampling.dist()
+betahat
+```
+
+<!---  Question 8 --->
+
+Figure 3 shows the fitted regression lines for our 10 datasets together with the regression line used to sample the data. 
+
+```{r, Lines, fig.cap="Fitted regression lines for 10 independent samples of the response vector. Also shown is the regression line used to sample the data."}
+plotModels <- function(betahat, Nruns=10, a=1, b=2){
+# 
+plot(x=NULL, y=NULL, xlab="X", ylab="Y", xlim=c(-2,2), ylim=c(-3,5),
+       main=paste(Nruns," samples of size 50"))
+#
+for (j in 1:Nruns){
+    abline(a=betahat[j,1], b=betahat[j,2], col="gray")
+    }
+#  
+abline(a, b, lwd=1.5)
+legend("topleft", lty=1, col=c("gray", "black"), legend=c("estimated regression line", "true regression line"))
+}
+
+# Run the function plotModels using the betahat computed earlier
+plotModels(betahat)
+```
+ 
+<!---  Question 9 --->
+```{r}
+sampling.dist <- function(Nruns=100, seed=4){ 
+#
+set.seed(seed)
+x <- runif(50,-2,2)
+#
+betahat <- matrix(NA, Nruns, 2)
+#
+for (j in 1:Nruns){
+  #
+  error <- rnorm(50, 0, 1)
+  y <- 1 + 2*x + error
+  #
+  m <- lm(y ~ x)
+  #
+  betahat[j,] <- coef(m)
+}
+return(betahat)}
+# Run the function sampling.dist with Nruns=10 and seed=4
+betahat=sampling.dist()
+betahat
+plotModels <- function(betahat, Nruns=100, a=1, b=2){
+# 
+plot(x=NULL, y=NULL, xlab="X", ylab="Y", xlim=c(-2,2), ylim=c(-3,5),
+       main=paste(Nruns," samples of size 50"))
+#
+for (j in 1:Nruns){
+    abline(a=betahat[j,1], b=betahat[j,2], col="gray")
+    }
+#  
+abline(a, b, lwd=1.5)
+legend("topleft", lty=1, col=c("gray", "black"), legend=c("estimated regression line", "true regression line"))
+}
+
+# Run the function plotModels using the betahat computed earlier
+plotModels(betahat)
+```
+
+<!--- Use the functions sampling.dist and plotModels to repeat the experiment 100 times --->
+Next we repeat the experiment 100 times. Figure 4 shows the results.
+
+```{r, 100RepeatedRuns, fig.cap="Fitted regression lines for 100 independent samples of the response vector. Also shown is the regression line used to sample the data."}
+# Sample response vector 100 times and fit linear model to each dataset 
+
+# Plot the results
+
+```
+
+<!--- Question 10 --->
+<!--- Histogram of estimated intercepts--->
+```{r, HistIntercept, fig.cap="Histogram of estimated intercepts.", eval=F}
+# Histogram of intercepts
+hist(betahat[,1], xlab="Estimated intercept", prob=T,
+     main="Histogram based on 100 samples", ylim=c(0,3.5))
+# Line indicating true intercept
+abline(v=1, col="darkred", lwd=3)
+# Kernel density estimate
+lines(density(betahat[,1]),lwd=2, col="blue")
+# Legend
+legend("topleft", legend=c("density estimate", "true intercept"), lty=1, col=c("blue","darkred"))
+```
+
+<!--- Comment on histogram--->
+
+<!---  Question 11 --->
+<!--- Histogram of estimated slopes--->
+```{r, HistSlope, fig.cap=""}
+hist(betahat[,2], xlab="Estimated slope", prob=T,
+     main="Histogram based on 100 samples", ylim=c(0,3.5))
+# Line indicating true intercept
+abline(v=1, col="darkred", lwd=3)
+# Kernel density estimate
+lines(density(betahat[,2]),lwd=2, col="blue")
+# Legend
+legend("topleft", legend=c("density estimate", "true slope"), lty=1, col=c("blue","darkred"))
+```
+<!--- Comment on histogram--->
+
+
+<!--- Question 12 a. --->
+<!--- Compute variances of sampling distribution --->
+We can compute the variances of the sampling distribution for the least squares estimator $\boldsymbol{\widehat{\beta}}({\boldsymbol Y})$ as $\sigma^2 \Big(\boldsymbol{X}^T\boldsymbol{X}\Big)^{-1}$. 
+
+```{r, CovarianceMatrix}
+
+```
+
+Doing this in `R` we obtain ...
+
+<!---  Question 12 b. --->
+<!--- Estimate variances of sampling distribution --->
+
+We can compare these variances with estimates derived from our experiments. For the intercept we obtain ... and for the slope we obtain ....
+
+We observe that the estimates are close to the theoretical values computed earlier. 

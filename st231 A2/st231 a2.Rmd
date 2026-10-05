@@ -1,0 +1,45 @@
+---
+title: "st231 a2"
+author: "Jingyu Zhang"
+date: "2026-02-06"
+output: pdf_document
+fontsize: 12pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+Dia=read.csv('dia2.csv')
+plot(log(price)~weight,data=Dia,pch=19,xlab='weight(carat)',ylab='log(price(dollar))',main='log(price) vs weight for diamond data',cex=0.5)
+log_model=lm(log(price)~weight,data=Dia)
+abline(log_model,col='red',lwd='3')
+
+```
+1.The assumption of a linear relationship is not reasonable because the shape of the scatters is a positive concave curve. Linear relationship overestimates the log(price) for weight< 0.5 carats and weight> 2.0 carats. 
+
+2.From the first graph, the relationship is positive but concave.On the Tukey-Mosteller grid, this corresponds to a bulge pointing toward the top-left quadrant (Quadrant 2). Then we should transform weight using a power p<1.  
+
+```{r, echo=FALSE}
+Dia=read.csv('dia2.csv')
+plot(log(price)~weight,data=Dia,pch=19,xlab='weight(carat)',ylab='log(price(dollar))',main='log(price) vs weight for diamond data',cex=0.5)
+
+model1 <- lm(log(price) ~ sqrt(weight), data = Dia)
+model2 <- lm(log(price) ~ log(weight), data = Dia)
+model3 <- lm(log(price) ~ I(1/weight), data = Dia)
+
+weights_seq <- seq(min(Dia$weight), max(Dia$weight), length.out = 100)
+
+lines(weights_seq, predict(model1, newdata = data.frame(weight = weights_seq)), col = "blue", lwd = 2, lty = 1) 
+lines(weights_seq, predict(model2, newdata = data.frame(weight = weights_seq)), col = "red", lwd = 2, lty = 2) 
+lines(weights_seq, predict(model3, newdata = data.frame(weight = weights_seq)), col = "darkgreen", lwd = 2, lty = 3)
+
+legend("bottomright", legend = c("sqrt(weight)", "log(weight)", "1/weight"),col = c("blue", "red", "darkgreen"), lty = 1:3, lwd = 2)
+```
+3.
+Model 1: $\log(\text{price}) \sim \sqrt{\text{weight}}$ (Solid Blue Line) It starts off following the data well but eventually begins to overshoot the points as weight increases beyond 1.5.  
+Model 2: $\log(\text{price}) \sim \log(\text{weight})$ (Dashed Red Line) This curve tracks the central density of the data points very closely across the entire range.  
+Model 3: $\log(\text{price}) \sim 1/\text{weight}$ (Dotted Green Line)
+It fits the very small weights okay,but levels off far too early. By the time weight reaches 1.5, the curve is well below almost all the data points.  
+Therefore, Model 2: $\log(\text{price}) \sim \log(\text{weight})$ is the most appropriate.

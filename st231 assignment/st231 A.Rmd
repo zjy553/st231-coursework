@@ -1,0 +1,319 @@
+---
+title: "st231 assignment"
+author: "Jingyu Zhang"
+output:
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    latex_engine: xelatex
+    highlight: monochrome
+  html_document:
+    df_print: paged
+    code_folding: hide
+header-includes:
+   - \usepackage{float}
+fontsize: 12pt
+
+---
+
+
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.align="center", out.width="70%")} else {opts_chunk$set(echo=TRUE)}
+```
+
+
+```{r, echo=FALSE}
+# Load data
+diamonds <- read.csv("dia.csv")
+
+# Fit model M1
+model_m1 <- lm(log(price) ~log(x) , data = diamonds)
+
+
+# Model summary
+ summary(model_m1)
+
+```
+
+a.  
+
+From summary,
+$M1: \log(\text{price}) = 5.93 \cdot \log(x) - 2.46$
+
+From Jeweller, $price \propto weight^{log1.21/log1.10}$,then
+$price \propto weight^{2}$
+
+By geometrical background and constant density $weight \propto x^{3}$
+
+Then, combine both the information from Jeweller and geometrical
+background, $price \propto x^{6}$, taking log, we get
+$log(price) \propto 6logx$
+
+This theoretical coefficient of 6 is very close to the estimated
+coefficient 5.93 from model M1, suggesting that the fitted model is
+reasonable.
+
+b.  
+
+From Jeweller, $price \propto weight^{2}$
+
+By geometrical background and constant density $weight \propto x \cdot y \cdot z$
+
+Combine these two and taking log, we get
+$log(price)\propto 2log(x)+2log(y)+2log(z)$
+
+Then, approximate values for $\beta_1$, $\beta_2$ and $\beta_3$ are both
+2.
+
+  
+
+```{r, echo=FALSE}
+model_m2 <- lm(log(price) ~ log(x) + log(y) + log(z), data = diamonds)
+
+summary(model_m2)
+```
+
+c.  
+
+$\mathbb{E}[log(Price_j)]$ =
+$\beta_0+\beta_1log(xj)+\beta_2log(y_j)+\beta_3log(z_j)$
+
+To test $H_0$:$\beta_1=0$ vs $H_1$:$\beta_1 \not= 0$ we use a t-test.
+The number of units of observation in the dataset is $n=607$ and the M2
+model has $p=4$ parameters. Hence, under $H_0$, the $T$-statistic,
+defined as
+$\frac{\widehat{\beta_1}}{{\rm std.error}(\widehat{\beta_1})}$ has a
+$t$-distribution on $n-p=607-4 = 603$ degrees of freedom. As is listed
+in the 2nd row of the table of coefficients, the observed value of the
+$T$-statistic is $T_{\rm obs} = -0.200$ which has a $p$-value of
+$0.842$. Thus there is insufficient evidence at the 5% level to reject
+the null hypothesis that $\beta_1=0$. We conclude that including log(x)
+does not have significant improvement after accounting for log(y) and
+log(z) in the model. Hence we do not include log(x) term in the model.
+
+```{r, echo=FALSE}
+anova(model_m2)
+```
+
+d.  
+
+$H_0$: log(x) provides no additional explanatory power over the null
+    model. $H_1$: log(x) contributes significant explanatory power over
+    the null model. The test statistic is the F-statistic, which under
+    $H_0$ follows an F(1,605) distribution. Observed F-value = $1.23 \times 10^{4}$
+    and corresponding p-value that is less than 0.001. We reject $H_0$.
+    Hence, log(x) is highly significant when added first to the model.
+
+This result is not contradictory to part (c). The test in (c) examines
+whether log(x) is significant after accounting for log(y) and log(z),
+while sequential ANOVA tests whether log(x) is significant alone. The
+high correlation between x, y, and z explains why log(x) appears
+insignificant in part (c) but highly significant in sequential ANOVA.
+
+e.  
+
+From summary results of M2, estimated $\beta 1$=-0.162,
+    $\beta 2$=4.39, $\beta 3$=1.78, while the theoretical
+    coefficients are both 2. The estimated coefficients of model M2 are
+    substantially different from the theoretically expected value of 2
+    for all three predictors. The primary reason for these
+    counter-intuitive results is strong multicollinearity between
+    log(x), log(y), and log(z).
+
+In the context of round diamonds, the physical dimensions x, y and z
+(length, width, depth) are inherently highly correlated, as they all
+describe the overall size of the stone. A diamond that is large in one
+dimension will almost certainly be large in the others. This strong
+linear dependence means the three log-transformed variables carry
+largely overlapping information.
+
+Numerically, this can be supported by high pairwise correlation
+coefficients between log(x), log(y) and log(z). Graphically, the
+scatterplot matrix of these variables would show strong linear
+associations, visually confirming the severe multicollinearity that
+distorts the individual slope estimates in M2.
+
+```{r,echo=FALSE}
+log_vars <- log(diamonds[, c("x", "y", "z")])
+cor_matrix=cor(log_vars)
+round(cor_matrix, 3)
+cat('table1: correlations between pairs of log(x),log(y) and log(z)')
+```
+
+```{r,out.width="65%",fig.align='center', fig.cap="A scatterplot matrix of the three explanatory variables log(x), log(y) and log(z) from diamonds dataset. We see that each pair of log(x), log(y) and log(z) all have a strong linear relationship",echo=FALSE}
+
+pairs(log(x) ~ log(y) + log(z), data = diamonds)
+```
+
+  
+
+```{r,echo=FALSE}
+model_m3 <- lm(log(price) ~ log(weight), data = diamonds)
+```
+
+  
+
+```{r,echo=FALSE}
+good <- diamonds[diamonds$cut == "Good", ]
+verygood <- diamonds[diamonds$cut == "Very Good", ]
+ideal <- diamonds[diamonds$cut == "Ideal", ]
+```
+
+
+```{r,out.width="65%",fig.align='center', fig.cap=" A scatterplot for log(weight) against log(price) for good cut dataset . The red line is the fitted regression line for for good cut dataset, and the blue line is the fitted line from model M3 using the full dataset.",echo=FALSE}
+fit_good <- lm(log(price) ~ log(weight), data = good)
+plot(log(price) ~ log(weight), data = good, main = "Good Cut", xlab = "log(weight) (in log(carat))", ylab = "log(price) (in log(US dollar))")
+abline(fit_good, col = "red", lwd = 2)         
+abline(model_m3, col = "blue", lwd = 2, lty = 2)
+```
+
+
+```{r,out.width="65%",fig.align='center', fig.cap="A scatterplot for log(weight) against log(price) for very good cut dataset. The red line is the fitted regression line for very good cut dataset, and the blue line is the fitted line from model M3 using the full dataset.",echo=FALSE}
+fit_vg <- lm(log(price) ~ log(weight), data = verygood)
+plot(log(price) ~ log(weight), data = verygood,
+     main = "Very Good Cut", xlab = "log(weight) (in log(carat))", ylab = "log(price) (in log(US dollar))")
+abline(fit_vg, col = "red", lwd = 2)
+abline(model_m3, col = "blue", lwd = 2, lty = 2)
+```
+
+
+```{r,out.width="65%",fig.align='center', fig.cap="A scatterplot for log(weight) against log(price) for ideal cut dataset. The red line is the fitted regression line for ideal cut dataset, and the blue line is the fitted line from model M3 using the full dataset.",echo=FALSE}
+fit_ideal <- lm(log(price) ~ log(weight), data = ideal)
+plot(log(price) ~ log(weight), data = ideal, main = "Ideal Cut", xlab = "log(weight) (in log(carat))", ylab = "log(price) (in log(US dollar))")
+abline(fit_ideal, col = "red", lwd = 2)
+abline(model_m3, col = "blue", lwd = 2, lty = 2)
+
+```
+
+c.  
+
+From the three plots for Good, Very Good and Ideal cut diamonds, we
+    observe that: The regression lines for each cut group are similar in
+    slope to each other and to the overall line from model M3. The
+    intercepts differ slightly between the three cut groups. The
+    relationship between log(price) and log(weight) is consistently
+    linear across all levels of cut.
+
+Merit of adding cut as a main effect: Adding cut as a main effect to
+model M3 is beneficial.Because the intercepts differ between cut
+categories, cut explains differences in the average price level at the
+same weight. Including cut as a main effect improves the model fit by
+accounting for these vertical shifts in price.
+
+Merit of adding cut as main effect + interaction with log(weight):
+Adding an interaction term between cut and log(weight) is not necessary
+or beneficial.The slopes of the regression lines are nearly identical
+across the three cut groups, meaning the relationship between price and
+weight does not change across cut quality. The interaction term would
+not improve the model meaningfully.
+
+  
+
+```{r,echo = FALSE}
+model_main <- lm(log(price) ~ log(weight) + cut, data = diamonds)
+
+anova(model_m3, model_main)
+```
+
+d.  
+
+$H_0$: All coefficients for cut are zero. $H_1$: At least one
+coefficient for cut is non-zero. The test statistic is the F-statistic,
+which under $H_0$ follows an F(2,603) distribution. Observed F-value =
+23.9 and corresponding p-value = $1.03 \times 10^{-10}$< 0.05. We reject $H_0$.
+Hence, Cut is highly significant and we include Cut variable to the
+model.
+
+```{r,echo = FALSE}
+model_interaction <- lm(log(price) ~ log(weight) + cut + log(weight) * cut, data = diamonds)
+
+anova(model_main, model_interaction)
+```
+
+$H_0$: All coefficients for the interaction cut:log(weight) are zero,
+given that main effects of cut and log(weight) are included. $H_1$: At least one interaction coefficient is non-zero , given that main effects of cut and log(weight) are included. 
+
+The test statistic is the F-statistic, which under $H_0$ follows an F(2,601) distribution.
+Observed F-value = 1.66 and corresponding p-value = 0.192 > 0.05. We do not have enough evidence to reject $H_0$. Hence, there is no significant evidence that the interaction improves the model, so we do not include the interaction term between cut and log(weight).
+
+```{r,echo=FALSE}
+M <- lm(log(price) ~ cut/log(weight), data = diamonds)
+summary(M)
+
+```
+
+e.  
+
+For Good cut: log(price)=$\beta_0 + \beta_1 log(weight)$ For Very Good
+cut: log(price)=$(\beta_0+\delta_0)+(\beta_1+\delta_1) log(weight)$
+
+For Ideal cut:
+log(price)=$(\beta_0+\gamma_0)+(\beta_1+\gamma_1) log(weight)$
+
+$\beta_0$ = intercept for Good cut  
+$\beta_1$= slope for Good cut    
+$\delta_0$= intercept difference for Very Good and good cut    
+$\gamma_0$=intercept difference for Ideal and good cut  
+$\delta_1$= slope difference for Very Good and good cut  
+$\gamma_1$= slope difference for Ideal and
+good cut   
+
+least squares estimate: $\beta_0$= 8.48,  
+$\gamma_0$= 0.107, $\delta_0$= 0.0528, $\beta_1$= 1.96 ,$\gamma_1$=
+1.9330-1.9563=-0.0233, $\delta_1$= 2.0122-1.9563=0.0559
+
+  
+
+```{r, out.width="70%", fig.align='center', fig.cap="Residuals vs fitted values for model M4 (log(price) ~ log(weight) + cut), points colour-coded by diamond clarity.", echo=FALSE}
+# Fit model M4
+M4 <- lm(log(price) ~ log(weight) + cut, data = diamonds)
+
+# Plot residuals vs fitted values, colour by clarity
+plot(fitted(M4), resid(M4), 
+     col = as.factor(diamonds$clarity), 
+     pch = 16, cex = 0.7,
+     xlab = "Fitted values", ylab = "Residuals",
+     main = "Residuals vs Fitted (M4)")
+abline(h = 0, col = "red", lwd = 2)
+legend("topright", legend = levels(as.factor(diamonds$clarity)),
+       col = 1:length(levels(as.factor(diamonds$clarity))), pch = 16)
+```
+
+a.  
+
+The residuals show a clear pattern separated by colour (clarity).
+Different clarity levels cluster in distinct regions of residual values.
+Red(VS) points cluster above the red line and black(SI) points cluster
+below the red line. This indicates that clarity is strongly associated
+with the remaining variation in price not explained by log(weight) and
+cut. Therefore, adding clarity as an additional predictor is likely to
+significantly improve the model by explaining the structured residual
+variation.
+
+```{r,echo=FALSE}
+M5 <- lm(log(price) ~ log(weight) + cut + clarity, data = diamonds)
+
+anova(M4, M5)
+```
+
+b.  
+
+Model under H0 (M4): log(price)∼log(weight)+cut  
+Model under H1 (M5): log(price)∼log(weight)+cut+clarity
+
+$F = \frac{(RSS_{M4} - RSS_{M5}) / (df_{M4} - df_{M5})}{RSS_{M5} / df_{M5}}$  
+
+The variable clarity has 2 levels, so it adds 2−1=1 parameters. $df_1=1$ Residual degrees of freedom.
+for M5: Total observations n=607. M5 has parameters: intercept + log(weight) + cut(2) + clarity(1) = 5 parameters. $df_2 = 607-5 = 602$.
+Therefore, under $H_0$, $F∼F(1,602)$  
+observed F = 941  
+p-value less than 0.001  
+reject $H_0$ 
+There is very strong evidence that including clarity significantly improves the model for predicting log(price), after accounting for log(weight) and cut. Clarity is an important predictor of diamond prices and should be retained in the model.
+
+c.  
+
+Yes, we could have used a two-sided t-test. From the ANOVA table, we see that the difference in degrees of freedom between M4 and M5 is 1. This means the variable clarity adds only one single parameter to the model. When comparing two nested models that differ by exactly one parameter, the partial F-test is mathematically equivalent to a two-sided t-test for that single coefficient.

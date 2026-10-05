@@ -1,0 +1,73 @@
+---
+title: "Practical Report 1"
+output: pdf_document
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+require(knitr)
+pdf_doc <- knitr::is_latex_output()
+if (pdf_doc) {opts_chunk$set(echo=FALSE, fig.dim = c(4.5, 4), fig.align="center")} 
+```
+
+# Coursework and exam performance
+
+We explore the relationship between the performance of students in coursework and their performance in the final exam. We start by loading the data.
+
+```{r DataInput, echo=FALSE}
+# Data
+Exam <- read.csv("Exam.csv")
+```
+
+In the following we fit a simple linear regression model to predict a student's exam mark from their coursework mark. 
+
+<!--- Question 2 & 3 --->
+
+```{r Scatterplot, fig.cap=""}
+# Add code here to produce a scatterplot of the data
+plot(ex ~ cw, xlab="Coursework mark (out of 20)", ylab="Exam mark (out of 100)", xlim=c(0,20), ylim=c(35,100), col="navy", pch=16, data=Exam)
+# Fit a linear model of ex on cw
+model1 <- lm(ex ~ cw, data = Exam)
+coef(model1)
+# Add the fitted regression line to the plot
+abline(model1, col="gray20")
+
+
+predict(model1, newdata = list(cw = 10))
+```
+
+<!--- Add some comments about the scatterplot (Question 3) --->
+
+
+<!--- Give an illustration and interpretation of the fitted model by answering the questions raised in the practical instructions. (Questions 4 - 6) --->
+
+<!--- Comment on the danger of extrapolation. (Question 7) --->
+
+<!--- Implement and graphically illustrate the new parameterisation of the model. (Question 8-9) -->
+
+```{r Reparameterisation, out.width="49%", fig.show="hold", fig.cap=""}
+# Scatterplot illustrating original parameterisation
+plot(ex ~ cw, xlab="Coursework mark (out of 20)", ylab="Exam mark (out of 100)", xlim=c(0,20), ylim=c(35,100), col="navy", pch=16, data=Exam)
+
+abline(model1, col="gray20")
+exam1.fit <- fitted(model1)
+points(exam1.fit ~ cw, col="darkred", pch=18, data=Exam)
+legend("bottomright", c("observed response", "fitted values for model 1"), pch=c(1, 18), col=c("navy", "darkred"))
+    
+
+# Scatterplot illustrating new parameterisation
+Exam$cwp=Exam$cw*100/20
+model2=lm(ex~cwp,data=Exam)
+plot(ex ~ cwp, xlab="Coursework mark percentage (out of 100)", ylab="Exam mark (out of 100)", xlim=c(0,100), ylim=c(35,100), col="navy", pch=16, data=Exam)
+
+abline(model2, col="gray20")
+exam2.fit <- fitted(model2)
+points(exam2.fit ~ cwp, col="darkred", pch=18, data=Exam)
+legend("bottomright", c("observed response", "fitted values for model 2"), pch=c(1, 18), col=c("navy", "darkred"))
+
+coefficients(model2)
+
+
+```
+
+<!--- Compare the coefficients of the two models (Question 10) -->

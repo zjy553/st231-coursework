@@ -1,0 +1,42 @@
+---
+title: "st231 lab report 1"
+author: "Jingyu Zhang"
+date: "2026-01-30"
+output: pdf_document
+fontsize: 12pt
+---
+**1.**
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+Diamond=read.csv('dia1.csv')
+plot(Diamond$weight, Diamond$price, 
+     pch = 20, col = "grey", 
+     xlab = "Weight(carat)", ylab = "Price(dollar)", 
+     main = "Diamond Price vs Weight")
+m2=lm(price~weight+I(weight**2),data= Diamond)
+m3=lm(price~weight+I(weight**2)+I(weight**3),data= Diamond)
+w_seq = seq(min(Diamond$weight), max(Diamond$weight), length.out = 100)
+new_data = data.frame(weight = w_seq)
+lines(w_seq, predict(m2, new_data), col = "blue", lwd = 2)
+lines(w_seq, predict(m3, new_data), col = "red", lwd = 2, lty = 2)
+legend("topleft", legend = c("Quadratic", "Cubic"), 
+       col = c("blue", "red"), lwd = 2, lty = c(1, 2))
+```
+**2.From the scatter plot above, it is evident that both models capture the positive non-linear relationship between weight and price. However, the cubic model appears to be a superior fit. While the quadratic model underestimates when weight<0.5 carats and overestimates when weight>2.0 carats.**
+\newpage
+**3.**  
+```{r}
+plot(predict(m2), resid(m2),
+     main = "Residuals: Quadratic",
+     xlab = "Fitted Values", ylab = "Residuals", pch = 20, col = "blue")
+abline(h = 0, col = "black", lty = 2)
+plot(predict(m3), resid(m3),
+     main = "Residuals: Cubic",
+     xlab = "Fitted Values", ylab = "Residuals", pch = 20, col = "red")
+abline(h = 0, col = "black", lty = 2)
+```
+
+**From the residual plots above, both models exhibit significant heteroscedasticity since they are both megaphone-shaped. In the quadratic plot, the residuals show a non-linear trend, whereas the cubic residuals appear more symmetric around the horizontal axis. Therefore, The cubic model is preferred.**

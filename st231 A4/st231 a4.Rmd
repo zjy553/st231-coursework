@@ -1,0 +1,131 @@
+---
+title: "st231 a4"
+author: "Jingyu Zhang"
+date: "2026-02-22"
+output: pdf_document
+fontsize: 12pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+1.
+```{r, echo=FALSE}
+dia4 <- read.csv("dia4.csv")
+model1 <- lm(log(price) ~ log(weight), data = dia4)
+```
+
+
+```{r fig.cap="Residuals versus leverage plot for Model 1 (log(price) ~ log(weight)). Cook’s distance contours are displayed and the three most influential observations are labelled.",echo= FALSE}
+plot(model1, which = 5,pch=19)
+title("Residuals vs Leverage Plot (Model 1)")
+```
+```{r echo=FALSE}
+# Leverage values
+leverage <- hatvalues(model1)
+
+# Standardised residuals
+std_res <- rstandard(model1)
+
+# Cook's distance
+cooks <- cooks.distance(model1)
+
+# Combine into data frame
+influence_data <- data.frame(
+  price = dia4$price,
+  weight = dia4$weight,
+  cut = dia4$cut,
+  leverage = leverage,
+  std_residual = std_res,
+  cooks_distance = cooks
+)
+
+top3_influential <- influence_data[order(-influence_data$cooks_distance), ][1:3, ]
+
+knitr::kable(top3_influential,
+             caption = "Price, weight, cut, leverage, standardised residual and Cook’s distance of the three most influential observations.")
+```
+
+```{r,echo=FALSE}
+dia4_fair <- subset(dia4, cut == "Fair")
+model2 <- lm(log(price) ~ log(weight), data = dia4_fair)
+top3_index <- order(-cooks)[1:3]
+```
+
+
+```{r fig.cap="Scatterplot of log-price against log-weight with fitted lines for Model 1 (all diamonds) and Model 2 (Fair cut only). The three most influential observations (based on Cook’s distance) are highlighted.", echo=FALSE,fig.align='center'}
+plot(log(dia4$weight), log(dia4$price),
+     pch = 16,
+     col = "grey",
+     xlab = "Log(Weight) (in log-carat)",
+     ylab = "Log(Price) (in log- US dollars)",
+     main = "Log-Price vs Log-Weight")
+
+abline(model1, col = "blue", lwd = 2)
+abline(model2, col = "red", lwd = 2)
+
+points(log(dia4$weight[top3_index]),
+       log(dia4$price[top3_index]),
+       col = "darkgreen",
+       pch = 19,
+       cex = 1.5)
+
+legend("topleft",
+       legend = c("Model 1 (All diamonds)",
+                  "Model 2 (Fair cut only)",
+                  "Top 3 Influential"),
+       col = c("blue", "red", "darkgreen"),
+       lwd = c(2, 2, NA),
+       pch = c(NA, NA, 19))
+
+```
+2.  
+The scatterplot shows a strong positive linear relationship between log-weight and log-price, supporting the use of a linear model on the log scale. The fitted line for the fair-cut diamonds differs slightly from the overall fitted line, indicating that restricting the data to fair-cut diamonds changes the estimated slope and/or intercept. This suggests that cut quality may affect price beyond weight alone, and Model 1 may omit relevant variation due to cut. The three influential observations occur at extreme values of weight, giving them high leverage and substantial influence on the fitted regression line. Their presence indicates that the fitted regression line in Model 1 and 2 are influenced by a few extreme observations, which may affect the stability of the estimated slope and intercept.
+  
+
+```{r fig.cap="Standardised residuals from Model 1 plotted against log-weight. Points are colour-coded by cut quality. Fair-cut diamonds show predominantly negative residuals at higher weights, suggesting model misspecification and possible non-linearity.", echo=FALSE, fig.align='center'}
+
+# Log-weight
+log_weight <- log(dia4$weight)
+
+# Ensure cut is a factor
+dia4$cut <- as.factor(dia4$cut)
+
+# Assign different colours for each cut
+cut_levels <- levels(dia4$cut)
+cols <- c("red", "blue", "darkgreen", "purple", "orange")[1:length(cut_levels)]
+cut_col <- cols[dia4$cut]
+
+plot(log_weight, std_res,
+     col = cut_col,
+     pch = 16,
+     xlab = "Log(Weight) (in log-carat)",
+     ylab = "Standardised Residuals",
+     main = "Standardised Residuals vs Log-Weight (Model 1)")
+
+abline(h = 0, lwd = 2)
+
+legend("topright",
+       legend = cut_levels,
+       col = cols,
+       pch = 16,
+       cex = 0.8)
+```
+3.  
+The fair-cut diamonds are mostly below zero, especially for larger log-weights.
+This means their standardised residuals are predominantly negative. Negative residuals indicate that Model 1 is overpredicting the log-price of fair-cut diamonds.
+The residuals are not randomly scattered around zero. This suggests that the relationship between log-price and log-weight for fair-cut diamonds may not follow the same linear trend as the overall model.
+The residuals for fair diamonds also appear more dispersed at larger weights, indicating heteroscedasticity within that group.  
+4.  
+The observation with the largest Cook’s distance is highly influential because it combines high leverage and a large standardised residual. 
+
+First, it has extreme large value of log-weight , placing it far from the centre of the predictor distribution. This gives it high leverage, meaning it has strong potential to affect the fitted regression line.  
+
+Second, its price does not follow the overall trend closely, resulting in a relatively large residual.  
+
+In the application context, diamond prices increase rapidly with weight, and large diamonds are rare. Because such observations are uncommon ( very heavy weight but price not very high) and sit at the edge of the data range, the regression line adjusts to accommodate them. As a result, this single observation has a strong impact on the estimated slope and intercept, leading to a large Cook’s distance.
+
+
+
